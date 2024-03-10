@@ -23,7 +23,9 @@ let renderer, scene, camera;
 /*******************
  * TO DO: Variables globales de la aplicacion
  *******************/
-let esferaCubo;
+let pentObject;
+let figures;
+let model;
 let angulo = 0;
 
 // Acciones
@@ -36,16 +38,15 @@ function init()
     // Motor de render
     renderer = new THREE.WebGLRenderer();
     renderer.setSize( window.innerWidth, window.innerHeight );
-    //renderer.setClearColor( new THREE.Color(0x0000AA) );
-    document.getElementById('container').appendChild( renderer.domElement );
     /*******************
     * TO DO: Completar el motor de render y el canvas
     *******************/
+    document.getElementById('container').appendChild( renderer.domElement );
 
     // Escena
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0.5,0.5,0.5);
-    
+
     // Camara
     camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1,1000);
     camera.position.set( 0.5, 2, 7 );
@@ -54,7 +55,7 @@ function init()
 
 function loadScene()
 {
-    const material = new THREE.MeshNormalMaterial( { color: 'yellow', wireframe: true });
+    const material = new THREE.MeshNormalMaterial( { color: 'yellow', wireframe: true});
 
     /*******************
     * TO DO: Construir un suelo en el plano XZ
@@ -67,51 +68,145 @@ function loadScene()
     * TO DO: Construir una escena con 5 figuras diferentes posicionadas
     * en los cinco vertices de un pentagono regular alredor del origen
     *******************/
+    //Creamos los objetos geometricos de las figuras
     const geoCubo = new THREE.BoxGeometry( 2,2,2 );
     const geoEsfera = new THREE.SphereGeometry( 1, 20,20 );
-
+    const geoCone = new THREE.ConeGeometry( 1, 5, 8, 1);
+    const geoCylinder = new THREE.CylinderGeometry( 1, 1, 2);
+    const geoCapsule = new THREE.CapsuleGeometry(1, 5, 1);
+    //Creamos la mesh con la geometría y el material
+    
     const cubo = new THREE.Mesh( geoCubo, material );
     const esfera = new THREE.Mesh( geoEsfera, material );
+    const cone = new THREE.Mesh( geoCone, material );
+    const cylinder = new THREE.Mesh( geoCylinder, material );
+    const capsule = new THREE.Mesh( geoCapsule, material );
+    figures = [cubo, esfera, cone, cylinder, capsule];
+
+
+    //Creamos la forma del pentagono y posicionamos sobre sus vertices a las figuras
+    const pentShape = new THREE.Shape();
+    const pentRadius = 4;
+    const pentSides = 5;
+
+    for (let i = 0; i < pentSides; i++) {
+        let angle = (i / pentSides) * Math.PI * 2;
+        //let angle = (i / pentSides) * (-Math.PI/2);
+        let x = Math.cos(angle) * pentRadius;
+        let y = Math.sin(angle) * pentRadius;
+        if (i === 0) {
+            pentShape.moveTo(x, y);
+        } else {
+            pentShape.lineTo(x, y);
+        }
+        //Colocamos la figura en la posición
+        figures[i].position.x = x;
+        figures[i].position.y = y;
+    }
+
+    //Creamos la geometría del pentagono
+    const geoPent = new THREE.ShapeGeometry( pentShape );
+    const pent = new THREE.Mesh( geoPent, material );
+
+    //Hacemos hijos del mesh del pentagono al resto de mesh y los rotamos para que sean paralelos al pentagono
+    for(let i = 0; i < figures.length; i++){
+        pent.add(figures[i]);
+        figures[i].rotation.x = Math.PI / 2;
+    }
+
+    //Rotamos el pentagono para que sea paralelo al suelo (también se mueven las figuras para que sean paralelas sobre el plano)
+    pent.rotation.x = -Math.PI / 2;
+
+     //Creamos el objeto 3D que representa el pentagono
+     pentObject = new THREE.Object3D();
+     pentObject.position.x=0;
+     pentObject.position.y=1;
+     pentObject.position.z=0;
+     pentObject.add(pent);
+     pentObject.add( new THREE.AxesHelper(1) );
+
+     scene.add(pentObject);
 
     /*******************
     * TO DO: Añadir a la escena un modelo importado en el centro del pentagono
     *******************/
-    const loader = new THREE.ObjectLoader();
-
-    loader.load( 'models/soldado/soldado.json', 
-        function(objeto){
-            cubo.add(objeto);
-            objeto.position.y = 1;})
-
     const glloader = new GLTFLoader();
 
     //glloader.load( 'models/RobotExpressive.glb', function ( gltf ) {
-        glloader.load( 'models/prueba/scene.gltf', function ( gltf ) {
+        glloader.load( 'models/bender/scene.gltf', function ( gltf ) {
             gltf.scene.position.y = 1;
             gltf.scene.rotation.y = -Math.PI/2;
+            pentObject.add( gltf.scene );
+            console.log("bender");
             esfera.add( gltf.scene );
-            console.log("ROBOT");
-            console.log(gltf);
-        
+            
         }, undefined, function ( error ) {
         
             console.error( error );
         
         } );
+
+            // Modelos importados
+        const loader = new THREE.ObjectLoader();
+        loader.load('models/soldado/soldado.json', 
+        function (objeto)
+        {
+            const soldado = new THREE.Object3D();
+            soldado.add(objeto);
+            cubo.add(soldado);
+            soldado.position.y = 1;
+            soldado.name = 'soldado';
+        });
+
+
+        const glloader2 = new GLTFLoader();
+
+        //glloader.load( 'models/RobotExpressive.glb', function ( gltf ) {
+            glloader2.load( 'models/medieval/scene.gltf', function ( gltf ) {
+                gltf.scene.position.y = 0;
+                gltf.scene.rotation.y = -Math.PI/2;
+                pentObject.add( gltf.scene );
+                console.log("medieval");
+                console.log(gltf);
+            
+            }, undefined, function ( error ) {
+            
+                console.error( error );
+            
+            } );
+
+            const glloader3 = new GLTFLoader();
+
+            //glloader.load( 'models/RobotExpressive.glb', function ( gltf ) {
+                glloader3.load( 'models/grace/scene.gltf', function ( gltf ) {
+                    gltf.scene.position.y = 0;
+                    gltf.scene.rotation.y = -Math.PI/2;
+                    capsule.add( gltf.scene );
+                    console.log("medieval");
+                    console.log(gltf);
+                
+                }, undefined, function ( error ) {
+                
+                    console.error( error );
+                
+                } );
+            //glloader.load( 'models/RobotExpressive.glb', function ( gltf ) {
+                glloader3.load( 'models/robota/scene.gltf', function ( gltf ) {
+                    gltf.scene.position.y = 1;
+                    gltf.scene.rotation.y = -Math.PI/2;
+                    cylinder.add( gltf.scene );
+                    console.log("medieval");
+                    console.log(gltf);
+                
+                }, undefined, function ( error ) {
+                
+                    console.error( error );
+                
+                } );
+                 
       /*******************
         * TO DO: Añadir a la escena unos ejes
         *******************/
-        esferaCubo = new THREE.Object3D();
-        esferaCubo.position.y = 1.5;
-        cubo.position.x = -1;
-        esfera.position.x = 1;
-        cubo.add( new THREE.AxesHelper(1) );
-    
-        scene.add( esferaCubo);
-        esferaCubo.add( cubo );
-        esferaCubo.add( esfera );
-     
-    
         scene.add( new THREE.AxesHelper(3) );
 }
 
@@ -122,8 +217,18 @@ function update()
     * y del conjunto pentagonal sobre el objeto importado
     *******************/
     angulo += 0.01;
-    esferaCubo.rotation.y = angulo;
+    pentObject.rotation.y = angulo;
+    for(let i = 0; i < figures.length; i++){
+        figures[i].rotation.y = angulo
+    }
+    try{
+        model.rotation.y = angulo;
+    }
+    catch{
+        console.log("El modelo no se ha cargado")
+    }
 }
+
 
 function render()
 {

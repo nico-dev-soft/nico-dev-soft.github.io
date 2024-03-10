@@ -80,8 +80,8 @@ function loadScene()
 {
     // Materiales 
     const path ="./images/";
-    const texcubo = new THREE.TextureLoader().load(path+"wood512.jpg");
-    const texsuelo = new THREE.TextureLoader().load(path+"suelo.jpg");
+    const texcubo = new THREE.TextureLoader().load(path+"pisometal.jpg");
+    const texsuelo = new THREE.TextureLoader().load(path+"pisometal.jpg");
     texsuelo.repeat.set(4,3);
     texsuelo.wrapS= texsuelo.wrapT = THREE.MirroredRepeatWrapping;
     const entorno = [ path+"posx.jpg", path+"negx.jpg",

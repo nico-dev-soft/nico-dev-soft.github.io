@@ -62,7 +62,11 @@ function loadScene()
     suelo.position.y = -0.2;
     scene.add(suelo);
 
-    // Esfera y cubo
+    /*******************
+    * TO DO: Construir una escena con 5 figuras diferentes posicionadas
+    * en los cinco vertices de un pentagono regular alredor del origen
+    *******************/
+    // Creamos los objetos geometricos de las figuras
     esfera = new THREE.Mesh( new THREE.SphereGeometry(1,20,20), material );
     cubo = new THREE.Mesh( new THREE.BoxGeometry(2,2,2), material );
     esfera.position.x = 1;
@@ -126,7 +130,9 @@ function setupGUI()
 	h.add(effectController, "mensaje").name("Aplicacion");
 	h.add(effectController, "giroY", -180.0, 180.0, 0.025).name("Giro en Y");
 	h.add(effectController, "separacion", { 'Ninguna': 0, 'Media': 2, 'Total': 5 }).name("Separacion");
-    h.addColor(effectController, "colorsuelo").name("Color alambres");
+    h.addColor(effectController, "colorsuelo")
+    .name("Color Objeto")
+    .onChange(c=>{cubo.material.setValues({color:c})});
 
 }
 
