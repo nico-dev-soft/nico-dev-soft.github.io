@@ -1,11 +1,11 @@
 /**
- * EscenaAnimada.js
+ * EscenaIluminada.js
  * 
- * Practica AGM #2. Escena basica con interfaz y animacion
- * Se trata de añadir un interfaz de usuario que permita 
- * disparar animaciones sobre los objetos de la escena con Tween
+ * Practica AGM #3. Escena basica con interfaz, animacion e iluminacion
+ * Se trata de añadir luces a la escena y diferentes materiales
  * 
- * @author <bnacegue@upv.es>, 2024
+ * @author Brayan Nicolás Aceros Guerrero <bnacegue@upv.edu.es>
+ * @date 13/03/2024
  * 
  */
 
@@ -24,7 +24,7 @@ let renderer, scene, camera;
  *******************/
 let cameraControls, effectController;
 let pentObject;
-let figures;
+let figures, cubo, esfera, cone, cylinder, capsule;
 
 // Acciones
 init();
@@ -53,6 +53,27 @@ function init()
     cameraControls.target.set(0,1,0);
     camera.lookAt( new THREE.Vector3(0,1,0) );
 
+    // Luces
+    const ambiental = new THREE.AmbientLight(0x222222);
+    scene.add(ambiental);
+    const direccional = new THREE.DirectionalLight(0xFFFFFF,0.3);
+    direccional.position.set(-1,1,-1);
+    direccional.castShadow = true;
+    scene.add(direccional);
+    const puntual = new THREE.PointLight(0xFFFFFF,0.5);
+    puntual.position.set(2,7,-4);
+    scene.add(puntual);
+    const focal = new THREE.SpotLight(0xFFFFFF,0.3);
+    focal.position.set(-2,7,4);
+    focal.target.position.set(0,0,0);
+    focal.angle= Math.PI/7;
+    focal.penumbra = 0.3;
+    focal.castShadow= true;
+    focal.shadow.camera.far = 20;
+    focal.shadow.camera.fov = 80;
+    scene.add(focal);
+    scene.add(new THREE.CameraHelper(focal.shadow.camera));
+
     // Eventos
     renderer.domElement.addEventListener('dblclick', animate );
     
@@ -60,6 +81,24 @@ function init()
 
 function loadScene()
 {
+     // Materiales 
+     const path ="./images/";
+     const texcubo = new THREE.TextureLoader().load(path+"wood512.jpg");
+     const texsuelo = new THREE.TextureLoader().load(path+"r_256.jpg");
+     texsuelo.repeat.set(4,3);
+     texsuelo.wrapS= texsuelo.wrapT = THREE.MirroredRepeatWrapping;
+     const entorno = [ path+"posx.jpg", path+"negx.jpg",
+                       path+"posy.jpg", path+"negy.jpg",
+                       path+"posz.jpg", path+"negz.jpg"];
+     const texesfera = new THREE.CubeTextureLoader().load(entorno);
+ 
+     const matcubo = new THREE.MeshLambertMaterial({color:'yellow',map:texcubo});
+     const matesfera = new THREE.MeshPhongMaterial({color:'white',
+                                                    specular:'gray',
+                                                    shininess: 30,
+                                                    envMap: texesfera });
+     const matsuelo = new THREE.MeshStandardMaterial({color:"rgb(150,150,150)",map:texsuelo});
+ 
     const material = new THREE.MeshBasicMaterial( { color: 'yellow', wireframe: true});
 
     /*******************
@@ -74,20 +113,13 @@ function loadScene()
     * en los cinco vertices de un pentagono regular alredor del origen
     *******************/
     //Creamos los objetos geometricos de las figuras
-    const geoCubo = new THREE.BoxGeometry( 2,2,2 );
-    const geoEsfera = new THREE.SphereGeometry( 1, 20,20 );
-    const geoCone = new THREE.ConeGeometry( 1, 5, 8, 1);
-    const geoCylinder = new THREE.CylinderGeometry( 1, 1, 2);
-    const geoCapsule = new THREE.CapsuleGeometry(1, 5, 1);
+    cubo = new THREE.Mesh( new THREE.BoxGeometry(2,2,2), matcubo );
+    esfera = new THREE.Mesh( new THREE.SphereGeometry( 1, 20,20 ), matesfera );
+    cone = new THREE.Mesh( new THREE.ConeGeometry( 1, 5, 8, 1), matcubo );
+    cylinder = new THREE.Mesh( new THREE.CylinderGeometry( 1, 1, 2), matcubo );
+    capsule = new THREE.Mesh( new THREE.CapsuleGeometry(1, 5, 1), matcubo );
 
-    //Creamos la mesh con la geometría y el material
-    const cubo = new THREE.Mesh( geoCubo, material );
-    const esfera = new THREE.Mesh( geoEsfera, material );
-    const cone = new THREE.Mesh( geoCone, material );
-    const cylinder = new THREE.Mesh( geoCylinder, material );
-    const capsule = new THREE.Mesh( geoCapsule, material );
     figures = [cubo, esfera, cone, cylinder, capsule];
-
 
     //Creamos la forma del pentagono y posicionamos sobre sus vertices a las figuras
     const pentShape = new THREE.Shape();
@@ -210,11 +242,41 @@ function loadScene()
                     console.error( error );
                 
                 } );
-                 
-      /*******************
-        * TO DO: Añadir a la escena unos ejes
-        *******************/
-        scene.add( new THREE.AxesHelper(3) );
+
+             // Habitacion
+            const paredes = [];
+            paredes.push( new THREE.MeshBasicMaterial({side:THREE.BackSide,
+                        map: new THREE.TextureLoader().load(path+"posx.jpg")}) );
+            paredes.push( new THREE.MeshBasicMaterial({side:THREE.BackSide,
+                        map: new THREE.TextureLoader().load(path+"negx.jpg")}) );
+            paredes.push( new THREE.MeshBasicMaterial({side:THREE.BackSide,
+                        map: new THREE.TextureLoader().load(path+"posy.jpg")}) );
+            paredes.push( new THREE.MeshBasicMaterial({side:THREE.BackSide,
+                        map: new THREE.TextureLoader().load(path+"negy.jpg")}) );
+            paredes.push( new THREE.MeshBasicMaterial({side:THREE.BackSide,
+                        map: new THREE.TextureLoader().load(path+"posz.jpg")}) );
+            paredes.push( new THREE.MeshBasicMaterial({side:THREE.BackSide,
+                        map: new THREE.TextureLoader().load(path+"negz.jpg")}) );
+            const habitacion = new THREE.Mesh( new THREE.BoxGeometry(40,40,40),paredes);
+            scene.add(habitacion);
+
+                // Cine
+            // video = document.createElement('video');
+            // video.src = "./videos/Pixar.mp4";
+            // video.load();
+            // video.muted = true;
+            // video.play();
+            // const texvideo = new THREE.VideoTexture(video);
+            // const pantalla = new THREE.Mesh(new THREE.PlaneGeometry(20,6, 4,4), 
+            //                                 new THREE.MeshBasicMaterial({map:texvideo}));
+            // pantalla.position.set(0,4.5,-5);
+            // scene.add(pantalla);
+
+
+        /*******************
+            * TO DO: Añadir a la escena unos ejes
+            *******************/
+            scene.add( new THREE.AxesHelper(3) );
 }
     function setupGUI()
     {

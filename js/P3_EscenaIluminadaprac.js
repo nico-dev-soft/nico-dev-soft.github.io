@@ -44,8 +44,9 @@ function init()
     scene.background = new THREE.Color(0.5,0.5,0.5);
 
     // Instanciar la camara
-    camera= new THREE.PerspectiveCamera(75,window.innerWidth/window.innerHeight,1,100);
+    camera= new THREE.PerspectiveCamera(75,window.innerWidth/window.innerHeight,0.1,1000);
     camera.position.set(0.5,2,7);
+    camera.lookAt( new THREE.Vector3(0,1,0));
     cameraControls = new OrbitControls( camera, renderer.domElement );
     cameraControls.target.set(0,1,0);
     camera.lookAt(0,1,0);
@@ -121,41 +122,6 @@ function loadScene()
 
     scene.add( new THREE.AxesHelper(3) );
     cubo.add( new THREE.AxesHelper(1) );
-
-    // Modelos importados
-    // const loader = new THREE.ObjectLoader();
-    // loader.load('models/soldado/soldado.json', 
-    // function (objeto)
-    // {
-    //     const soldado = new THREE.Object3D();
-    //     soldado.add(objeto);
-    //     cubo.add(soldado);
-    //     soldado.position.y = 1;
-    //     soldado.name = 'soldado';
-    //     soldado.traverse(ob=>{
-    //         if(ob.isObject3D) ob.castShadow = true;
-    //     });
-    //     objeto.material.setValues( {map:
-    //     new THREE.TextureLoader().load("models/soldado/soldado.png")} );
-    // });
-
-    // Importar un modelo en gltf
-    // const glloader = new GLTFLoader();
-
-    // glloader.load( 'models/robota/scene.gltf', function ( gltf ) {
-    //     gltf.scene.position.y = 1;
-    //     gltf.scene.rotation.y = -Math.PI/2;
-    //     gltf.scene.name = 'robota';
-    //     esfera.add( gltf.scene );
-    //     gltf.scene.traverse(ob=>{
-    //     if(ob.isObject3D) ob.castShadow = true;
-    // })
-
-    // }, undefined, function ( error ) {
-
-    //     console.error( error );
-
-    // } );
 
     const glloader1 = new GLTFLoader();
 
