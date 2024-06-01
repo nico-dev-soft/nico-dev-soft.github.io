@@ -21,7 +21,7 @@ let renderer, scene, camera;
 
 // Otras globales
 let cameraControls, effectController;
-let esferaCubo,cubo,esfera,suelo, figuras;
+let esferaCubo,cubo,esfera,suelo;
 let video,  camaraOrtografica, camaraOrtografica2, camaraOrtografica3 ;
 
 // Luces direccional y focal.
@@ -56,12 +56,11 @@ function init()
 
     // Instanciar el nodo raiz de la escena
     scene = new THREE.Scene();
-    //scene.background = new THREE.Color(0.5,0.5,0.5);
+
 
     // Instanciar la camara
     camera= new THREE.PerspectiveCamera(75,window.innerWidth/window.innerHeight,0.1,1000);
     camera.position.set(0.5,2,10);
-    //camera.lookAt( new THREE.Vector3(0,1,0));
     cameraControls = new OrbitControls( camera, renderer.domElement );
     cameraControls.target.set(0,-1,0);
 
@@ -171,7 +170,7 @@ function loadScene()
 
     scene.add(esferaCubo);
 
-    figuras = [esfera, cubo, esferaCubo, suelo];
+    //figuras = [esfera, cubo, esferaCubo, suelo];
 
     //Objeto coche
     const glloader = new GLTFLoader();
@@ -274,13 +273,11 @@ function setupGUI()
         focalIntensity: 0.5,        
         focalPosX: 2,
         focalPosY: 5,
-        focalPosZ: 0,
-        moverFiguras: 0.5,        
+        focalPosZ: 0,     
         direccionalShadow: true,
         focalShadow: true,
         enableDireccinalHelper: true,
         enableFocalHelper: true,
-		separacion: 0,
 		sombras: false,
 		play: function(){video.play();},
 		pause: function(){video.pause();},
