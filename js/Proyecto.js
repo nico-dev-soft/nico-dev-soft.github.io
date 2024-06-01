@@ -25,8 +25,8 @@ let esferaCubo,cubo,esfera,suelo, figuras;
 let video,  camaraOrtografica, camaraOrtografica2, camaraOrtografica3 ;
 
 // Luces direccional y focal.
-let direccional, focal, focal1;
-let direccionalHelper, focalHelper, focal1Helper;
+let direccional, focal;
+let direccionalHelper, focalHelper;
 
 // Otras
 const L = 1.5;
@@ -102,20 +102,15 @@ function init()
     scene.add(ambiental);
 
     //Luz direccional
-    const direccional = new THREE.DirectionalLight(0xFFFFFF,1);
+    direccional = new THREE.DirectionalLight(0xFFFFFF,1);
     direccional.position.set(5,6,-5);
     direccional.castShadow = true;
     scene.add(direccional);
     direccionalHelper = new THREE.CameraHelper(direccional.shadow.camera)
     scene.add(direccionalHelper);
 
-    //Luz puntual
-    //  const puntual = new THREE.PointLight(0xFFFFFF,0.5);
-    // puntual.position.set(2,7,-4);
-    // scene.add(puntual);
-
     //Luz Focal
-    const focal = new THREE.SpotLight(0xFFFFFF,0.7);
+    focal = new THREE.SpotLight(0xFFFFFF,0.3);
     focal.position.set(-5,10,5);
     focal.target.position.set(0,0,0);
     focal.angle= Math.PI/7;
@@ -130,6 +125,7 @@ function init()
     // Eventos
     window.addEventListener('resize', updateAspectRatio );
     renderer.domElement.addEventListener('dblclick', animate );
+
 }
 
 function loadScene()
@@ -137,7 +133,7 @@ function loadScene()
     // Materiales 
     const path ="./images/";
     const texcubo = new THREE.TextureLoader().load(path+"escenario.jpg");
-    const texsuelo = new THREE.TextureLoader().load(path+"pisometal.jpg");
+    const texsuelo = new THREE.TextureLoader().load(path+"suelo.jpg");
     texsuelo.repeat.set(4,3);
     texsuelo.wrapS= texsuelo.wrapT = THREE.MirroredRepeatWrapping;
     const entorno = [ path+"posx.jpg", path+"negx.jpg",
@@ -153,7 +149,7 @@ function loadScene()
     const matsuelo = new THREE.MeshStandardMaterial({color:"rgb(150,150,150)",map:texsuelo});
 
     // Suelo
-    suelo = new THREE.Mesh( new THREE.PlaneGeometry(10,10, 100,100), matsuelo );
+    suelo = new THREE.Mesh( new THREE.PlaneGeometry(15,15, 100,100), matsuelo );
     suelo.rotation.x = -Math.PI/2;
     suelo.position.y = -0.2;
     suelo.receiveShadow = true;
@@ -175,23 +171,17 @@ function loadScene()
 
     scene.add(esferaCubo);
 
-    // scene.add( new THREE.AxesHelper(3) );
-    // cubo.add( new THREE.AxesHelper(1) );
-
     figuras = [esfera, cubo, esferaCubo, suelo];
 
     //Objeto coche
-    const glloader1 = new GLTFLoader();
+    const glloader = new GLTFLoader();
 
-    glloader1.load( 'models/mclaren/scene.gltf', function ( gltf ) {
+    glloader.load( 'models/mclaren/scene.gltf', function ( gltf ) {
         gltf.scene.position.y = 0.5;
         gltf.scene.rotation.y = -Math.PI/2;
-        gltf.scene.name = 'mclaren';
         esfera.add( gltf.scene );
-        gltf.scene.traverse(ob=>{
-        if(ob.isObject3D) ob.castShadow = true;
-    })
-
+        gltf.scene.name = 'mclaren';
+   
     }, undefined, function ( error ) {
 
         console.error( error );
@@ -200,21 +190,17 @@ function loadScene()
 
     
     //Objeto Piloto
-    const glloader2 = new GLTFLoader();
+    const glloader1 = new GLTFLoader();
 
-    glloader2.load( 'models/racer_girl/scene.gltf', function ( gltf ) {
+    glloader1.load( 'models/racer_girl/scene.gltf', function ( gltf ) {
         gltf.scene.position.y = 0.5;
         gltf.scene.position.x = 3;
         gltf.scene.position.z = 2;
         gltf.scene.rotation.y = -Math.PI/10;
-        gltf.scene.name = 'pilot';
         esfera.add( gltf.scene );
-        gltf.scene.traverse(ob=>{
-        if(ob.isObject3D) ob.castShadow = true;
-    })
-
-    // Disminuir el tamaño del personaje
-    gltf.scene.scale.set(0.5, 0.5, 0.5); // Aquí puedes ajustar el tamaño según tus necesidades
+        gltf.scene.name = 'pilot';
+        // Disminuir el tamaño del personaje
+        gltf.scene.scale.set(0.5, 0.5, 0.5); // Aquí puedes ajustar el tamaño según tus necesidades
 
 
     }, undefined, function ( error ) {
@@ -223,6 +209,25 @@ function loadScene()
 
     } );
 
+        //Objeto Drone
+        const glloader2 = new GLTFLoader();
+
+        glloader2.load( 'models/drone/scene.gltf', function ( gltf ) {
+            gltf.scene.position.y = 4;
+            gltf.scene.position.x = -1;
+            gltf.scene.position.z = 2;
+            gltf.scene.rotation.y = Math.PI/10;
+            esfera.add( gltf.scene );
+            gltf.scene.name = 'drone';
+            // Disminuir el tamaño del drone
+            gltf.scene.scale.set(0.05, 0.05, 0.05); // Aquí puedes ajustar el tamaño según tus necesidades
+    
+    
+        }, undefined, function ( error ) {
+    
+            console.error( error );
+    
+        } );
 
     // Habitacion
     const paredes = [];
@@ -259,7 +264,7 @@ function setupGUI()
 {
 	// Definicion de los controles
 	effectController = {
-		mensaje: 'Mclaren',
+		mensaje: 'Mclaren 720s',
 		giroY: 0.0,
         alambric: true,  
         direccionalIntensity: 0.5,
@@ -270,10 +275,6 @@ function setupGUI()
         focalPosX: 2,
         focalPosY: 5,
         focalPosZ: 0,
-        // focal1Intensity: 0.5,        
-        // focal1PosX: 2,
-        // focal1PosY: 5,
-        // focal1PosZ: 0,
         moverFiguras: 0.5,        
         direccionalShadow: true,
         focalShadow: true,
@@ -294,11 +295,9 @@ function setupGUI()
 	const h = gui.addFolder("Control Coche Tarima");
 	h.add(effectController, "mensaje").name("Aplicacion");
 	h.add(effectController, "giroY", -180.0, 180.0, 0.025).name("Rotación");
-	h.add(effectController, "sombras")
-      .onChange(v=>{
-        cubo.castShadow = v;
-        esfera.castShadow = v;
-      });
+    h.add(effectController, "sombras").name("Sombras").onChange(function(value) {
+        setShadows(value);
+    });
     h.addColor(effectController, "colorsuelo")
      .name("Color Tarima")
      .onChange(c=>{cubo.material.setValues({color:c})});
@@ -307,66 +306,58 @@ function setupGUI()
     videofolder.add(effectController,"mute").onChange(v=>{video.muted = v});
 	videofolder.add(effectController,"play");
 	videofolder.add(effectController,"pause");
-    // Agregar un control deslizante para ajustar el volumen
+    // Control deslizante para ajustar el volumen
     effectController.volumen = 0.5;
     videofolder.add(effectController, "volumen", 0, 1, 0.01).name("Volumen").onChange(v => {
          video.volume = v;
      });
   
-    const hb = gui.addFolder("Luz Direccional");
-    hb.close()
-    hb.add(effectController, "direccionalIntensity", 0, 1, 0.1).name("Intensidad").onChange(v => {
+    const hd = gui.addFolder("Luz Direccional");
+    hd.close()
+    hd.add(effectController, "direccionalIntensity", 0, 1, 0.1).name("Intensidad").onChange(v => {
         direccional.intensity = v;
     });
-    hb.add(effectController, "direccionalPosX", -5, 5, 0.5).name("Iluminación desde Eje X      ").onChange(v => {
+    hd.add(effectController, "direccionalPosX", -5, 5, 0.5).name("Iluminación desde Eje X      ").onChange(v => {
         direccional.position.x = v;
     });
-    hb.add(effectController, "direccionalPosY", 0, 10, 0.5).name("Iluminación desde Eje Y      ").onChange(v => {
+    hd.add(effectController, "direccionalPosY", 0, 10, 0.5).name("Iluminación desde Eje Y      ").onChange(v => {
         direccional.position.y = v;
     });
-    hb.add(effectController, "direccionalPosZ", -5, 5, 0.5).name("Iluminación desde Eje Z      ").onChange(v => {
+    hd.add(effectController, "direccionalPosZ", -5, 5, 0.5).name("Iluminación desde Eje Z      ").onChange(v => {
         direccional.position.z = v;
     });
-    hb.add(effectController, "direccionalShadow").name("Desactivar Sombras   ").onChange(v => {
+    hd.add(effectController, "focalShadow").name("Desactivar Sombras   ").onChange(v => {
         direccional.castShadow = v;
     });
-    hb.add(effectController, "enableDireccinalHelper").name("Desactivar Ejes   ").onChange(v => {
+    hd.add(effectController, "enableDireccinalHelper").name("Desactivar Ejes   ").onChange(v => {
         if(v){
             scene.add(direccionalHelper);
         }
         else{
             scene.remove(direccionalHelper);
         }
-    })
+       
+    });
 
-//     // Suponiendo que ya has creado una luz focal y un helper para la luz
-// const focal = new THREE.SpotLight(0xffffff);
-// focal.position.set(effectController.focalPosX, effectController.focalPosY, effectController.focalPosZ);
-// focal.intensity = effectController.focalIntensity;
-// focal.castShadow = effectController.focalShadow;
 
-// const focalHelper = new THREE.SpotLightHelper(focal);
-// if (effectController.enableFocalHelper) {
-//     scene.add(focalHelper);
-// }
-    const hc =  gui.addFolder("Luz Focal Tarima");
-    hc.close()
-    hc.add(effectController, "focalIntensity", 0, 1, 0.1).name("Intensidad").onChange(v => {
+    const hf =  gui.addFolder("Luz Focal Tarima");
+    hf.close()
+    hf.add(effectController, "focalIntensity", 0, 1, 0.1).name("Intensidad").onChange(v => {
         focal.intensity = v;
     });
-    hc.add(effectController, "focalPosX", -5, 5, 0.5).name("Iluminación desde Eje X      ").onChange(v => {
+    hf.add(effectController, "focalPosX", -5, 5, 0.5).name("Iluminación desde Eje X      ").onChange(v => {
         focal.position.x = v;
     });
-    hc.add(effectController, "focalPosY", 0, 10, 0.5).name("Iluminación desde Eje Y      ").onChange(v => {
+    hf.add(effectController, "focalPosY", 0, 10, 0.5).name("Iluminación desde Eje Y      ").onChange(v => {
         focal.position.y = v;
     });
-    hc.add(effectController, "focalPosZ", -5, 5, 0.5).name("Iluminación desde Eje Z      ").onChange(v => {
+    hf.add(effectController, "focalPosZ", -5, 5, 0.5).name("Iluminación desde Eje Z      ").onChange(v => {
         focal.position.z = v;
     });
-    hc.add(effectController, "focalShadow").name("Desactivar Sombras   ").onChange(v => {
+    hf.add(effectController, "focalShadow").name("Desactivar Sombras   ").onChange(v => {
         focal.castShadow = v;
     });
-    hc.add(effectController, "enableFocalHelper").name("Desactivar Ejes   ").onChange(v => {
+    hf.add(effectController, "enableFocalHelper").name("Desactivar Ejes   ").onChange(v => {
         if(v){
             scene.add(focalHelper);
         }
@@ -375,7 +366,41 @@ function setupGUI()
         }
     })
 
+    // Función para habilitar o deshabilitar las sombras
+    function setShadows(enable) {
+        esfera.traverse(function (object) {
+            if (object.isMesh) {
+                object.castShadow = enable;
+                object.receiveShadow = enable;
+            }
+        });
+        cubo.traverse(function (object) {
+            if (object.isMesh) {
+                object.castShadow = enable;
+                object.receiveShadow = enable;
+            }
+        });
+    }
+
+    const options = {
+        texture: 'suelo.jpg', // Textura por defecto
+        updateTexture: function() {
+            // Actualizar la textura del suelo según la selección del usuario
+            suelo.material.map = new THREE.TextureLoader().load('./images/' + options.texture);
+            suelo.material.map.needsUpdate = true; // Asegúrate de que la textura se actualice correctamente
+        }
+    };
+    
+    // Agregar opciones al menú
+    const texturesFolder = gui.addFolder('Texturas Suelo');
+    texturesFolder.add(options, 'texture', ['suelo.jpg', 'suelo01.jpg', 'suelo02.jpg']).onChange(options.updateTexture);
+    
+    // Llamar a la función updateTexture para aplicar la textura por defecto
+    options.updateTexture();
+   
 }
+
+
 
 function updateAspectRatio()
 {
@@ -433,33 +458,47 @@ function updateAspectRatio()
 
 function animate(event)
 {
-    // Capturar y normalizar
-    let x= event.clientX;
-    let y = event.clientY;
-    x = ( x / window.innerWidth ) * 2 - 1;
-    y = -( y / window.innerHeight ) * 2 + 1;
+  // Capturar y normalizar
+  let x= event.clientX;
+  let y = event.clientY;
+  x = ( x / window.innerWidth ) * 2 - 1;
+  y = -( y / window.innerHeight ) * 2 + 1;
 
-    // Construir el rayo y detectar la interseccion
-    const rayo = new THREE.Raycaster();
-    rayo.setFromCamera(new THREE.Vector2(x,y), camera);
-    const pilot = scene.getObjectByName('pilot');
+  // Construir el rayo y detectar la interseccion
+  const rayo = new THREE.Raycaster();
+  rayo.setFromCamera(new THREE.Vector2(x,y), camera);
+  const pilot = scene.getObjectByName('pilot');
+  const drone = scene.getObjectByName('drone');
 
-    intersecciones = rayo.intersectObjects(pilot.children, true);
 
-    if( intersecciones.length > 0 ){
-        new TWEEN.Tween( pilot.rotation )
-        .to( {x:[0,0],y:[Math.PI,-Math.PI/2],z:[0,0]}, 5000 )
-        .interpolation( TWEEN.Interpolation.Bezier )
-        .easing( TWEEN.Easing.Exponential.InOut )
-        .start();
-    }
+   let intersecciones = rayo.intersectObjects(drone.children,true);
+
+  // Animacion objeto drone
+   if( intersecciones.length > 0 ){
+      new TWEEN.Tween( drone.position ).
+       to( {x:[3,1],y:[5,4],z:[3,0]}, 2000 ).
+      interpolation( TWEEN.Interpolation.Bezier).
+       easing( TWEEN.Easing.Exponential.Out ).
+      start();
+   }
+
+   // Animacion objeto pilot 
+  intersecciones = rayo.intersectObjects(pilot.children,true);
+
+  if( intersecciones.length > 0 ){
+      new TWEEN.Tween( pilot.rotation ).
+      to( {x:[0,0],y:[Math.PI,-Math.PI/2],z:[0,0]}, 4000 ).
+      interpolation( TWEEN.Interpolation.Linear ).
+      easing( TWEEN.Easing.Exponential.InOut ).
+      start();
+  }
+
 }
 
 function update()
 {
 	// Lectura de controles en GUI (mejor hacerlo como callback)
 	esferaCubo.rotation.y = effectController.giroY * Math.PI/180;
-
     TWEEN.update();
 }
 
@@ -476,7 +515,7 @@ function render()
     renderer.render( scene, camaraOrtografica2 );
     renderer.setViewport(3, 2*window.innerHeight/8, window.innerWidth/6,window.innerHeight/6);
     renderer.render( scene, camaraOrtografica3 );
-  
+    renderer.domElement.addEventListener('click', animate);
   
 }
 
